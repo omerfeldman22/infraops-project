@@ -1,0 +1,94 @@
+# Azure
+*.azureauth
+*.publishsettings
+.azure/
+local.settings.json
+
+# Copilot session logs
+Copilot-Processing.md
+
+# Bicep
+*.bin
+
+# PowerShell
+*.ps1xml
+
+# VS Code - ignore personal settings but keep shared config
+.vscode/*
+!.vscode/extensions.json
+!.vscode/mcp.json
+!.vscode/settings.json
+*.code-workspace
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+logs/
+
+# Environment
+.env
+.env.local
+*.env
+
+# Secrets
+secrets/
+*.secret
+*.key
+*.pem
+*.pfx
+
+# Temporary
+tmp/
+temp/
+*.tmp
+
+# Build outputs
+bin/
+obj/
+dist/
+build/
+site/
+
+# Node (if any demos use it)
+node_modules/
+
+# Python (if any scripts)
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Test results
+TestResults/
+*.trx
+
+# Personal notes
+NOTES.md
+TODO.md
+Copilot-Processing.md
+scratch/
+
+# Extracted sample apps (use .zip files instead to avoid Dependabot alerts)
+scenarios/S06-sbom-generator/sample-app/
+freshness-report.json
+
+# Baseline snapshots (local working data for context optimizer)
+agent-output/_baselines/
+
+# MkDocs build output (deployed via gh-pages branch, not committed to main)
+site/
+
+# Terraform
+*.tfstate
+*.tfstate.backup
+.terraform/
+*.tfvars
+!terraform.tfvars.example
+crash.log
+crash.*.log
+.infracost/
+# DO NOT ignore .terraform.lock.hcl — it must be committed for reproducible provider versions

@@ -1,0 +1,256 @@
+#!/usr/bin/env node
+/**
+ * Governance Reference Validator
+ *
+ * Validates that governance guardrails remain intact across agents,
+ * instructions, and subagents. Fails CI if any guardrail is removed.
+ *
+ * Checks:
+ * 1. Bicep Code Generator references 04-governance-constraints
+ * 2. bicep-review-subagent has Governance Compliance checklist
+ * 3. Bicep Planner references JSON output schema completeness
+ * 4. bicep-policy-compliance.instructions.md exists with correct applyTo
+ *
+ * @example
+ * node scripts/validate-governance-refs.mjs
+ */
+
+import fs from "node:fs";
+import path from "node:path";
+
+const ROOT = process.cwd();
+
+let errors = 0;
+let checks = 0;
+
+function check(description, condition) {
+  checks++;
+  if (condition) {
+    console.log(`  ✅ ${description}`);
+  } else {
+    console.error(`  ❌ ${description}`);
+    errors++;
+  }
+}
+
+const _fileCache = new Map();
+
+function fileContains(filePath, pattern) {
+  const absPath = path.resolve(ROOT, filePath);
+  if (!fs.existsSync(absPath)) return false;
+  if (!_fileCache.has(absPath)) {
+    _fileCache.set(absPath, fs.readFileSync(absPath, "utf-8"));
+  }
+  const content = _fileCache.get(absPath);
+  if (pattern instanceof RegExp) return pattern.test(content);
+  return content.includes(pattern);
+}
+
+function fileExists(filePath) {
+  return fs.existsSync(path.resolve(ROOT, filePath));
+}
+
+console.log("\n🔍 Governance Reference Validation\n");
+
+// 1. Bicep Code Generator references governance constraints
+console.log("📄 06b-bicep-codegen.agent.md");
+const codeGenPath = ".github/agents/06b-bicep-codegen.agent.md";
+check(
+  "References 04-governance-constraints",
+  fileContains(codeGenPath, "04-governance-constraints"),
+);
+check(
+  "Has Phase 1.5: Governance Compliance Mapping",
+  fileContains(codeGenPath, "Phase 1.5"),
+);
+check(
+  "References bicep-policy-compliance.instructions.md",
+  fileContains(codeGenPath, "bicep-policy-compliance.instructions.md"),
+);
+check(
+  "DO list includes governance constraint parsing",
+  fileContains(codeGenPath, "Parse") &&
+    fileContains(codeGenPath, "04-governance-constraints.json") &&
+    fileContains(codeGenPath, "Deny policy"),
+);
+check(
+  "DON'T list warns against hardcoded tag lists",
+  fileContains(codeGenPath, "hardcoded tag lists"),
+);
+check(
+  "DON'T list warns against skipping governance mapping",
+  fileContains(codeGenPath, "Skip governance compliance mapping"),
+);
+
+// 2. bicep-review-subagent has Governance Compliance section
+console.log("\n📄 bicep-review-subagent.agent.md");
+const reviewPath = ".github/agents/_subagents/bicep-review-subagent.agent.md";
+check(
+  "Has Governance Compliance section",
+  fileContains(reviewPath, "### 7. Governance Compliance"),
+);
+check(
+  "Checks tag count against governance constraints",
+  fileContains(reviewPath, "Tag count matches governance"),
+);
+check(
+  "Checks Deny policies are satisfied",
+  fileContains(reviewPath, "Deny polic"),
+);
+check(
+  "Checks publicNetworkAccess",
+  fileContains(reviewPath, "publicNetworkAccess"),
+);
+check("Checks SKU restrictions", fileContains(reviewPath, "SKU restriction"));
+
+// 3. Bicep Planner consumes governance JSON as prerequisite
+console.log("\n📄 05b-bicep-planner.agent.md");
+const plannerPath = ".github/agents/05b-bicep-planner.agent.md";
+check(
+  "References governance constraints as prerequisite",
+  fileContains(plannerPath, "04-governance-constraints"),
+);
+check(
+  "Has policy effect decision tree (inline or reference)",
+  fileContains(plannerPath, "Code Generator Action") ||
+    fileContains(plannerPath, "policy-effect-decision-tree"),
+);
+
+// 4. bicep-policy-compliance.instructions.md exists and is valid
+console.log("\n📄 bicep-policy-compliance.instructions.md");
+const policyInstrPath =
+  ".github/instructions/bicep-policy-compliance.instructions.md";
+check("File exists", fileExists(policyInstrPath));
+check(
+  "Has correct applyTo scope including *.bicep",
+  fileContains(policyInstrPath, "**/*.bicep"),
+);
+check(
+  "applyTo no longer includes agent.md files",
+  !fileContains(policyInstrPath, "**/*.agent.md"),
+);
+check(
+  'States "Azure Policy always wins"',
+  fileContains(policyInstrPath, "Azure Policy always wins"),
+);
+check(
+  "References 04-governance-constraints.json",
+  fileContains(policyInstrPath, "04-governance-constraints.json"),
+);
+
+// 5. Governance discovery instructions include downstream enforcement
+console.log("\n📄 governance-discovery.instructions.md");
+const govDiscPath = ".github/instructions/governance-discovery.instructions.md";
+check(
+  "applyTo covers governance artifacts",
+  (() => {
+    const content = fs.readFileSync(
+      path.resolve(process.cwd(), govDiscPath),
+      "utf-8",
+    );
+    const fmMatch = content.match(/^---\n([\s\S]*?)\n---/);
+    if (!fmMatch) return false;
+    const fm = fmMatch[1];
+    return (
+      fm.includes("04-governance-constraints.md") ||
+      fm.includes("04-governance-constraints")
+    );
+  })(),
+);
+check(
+  "Has Downstream Enforcement section",
+  fileContains(govDiscPath, "## Downstream Enforcement"),
+);
+
+// 6. Terraform Planner uses azurePropertyPath (not bicepPropertyPath)
+console.log("\n📄 05t-terraform-planner.agent.md");
+const tfPlannerPath = ".github/agents/05t-terraform-planner.agent.md";
+check(
+  "Uses azurePropertyPath (not bicepPropertyPath) for property mapping",
+  fileContains(tfPlannerPath, "azurePropertyPath") &&
+    fileContains(tfPlannerPath, "always use `azurePropertyPath`"),
+);
+check(
+  "Governance constraints are a prerequisite",
+  fileContains(tfPlannerPath, "REQUIRED") &&
+    fileContains(tfPlannerPath, "04-governance-constraints"),
+);
+check(
+  "References 04-governance-constraints.json",
+  fileContains(tfPlannerPath, "04-governance-constraints.json"),
+);
+
+// 7. Terraform Code Generator governance compliance
+console.log("\n📄 06t-terraform-codegen.agent.md");
+const tfCodeGenPath = ".github/agents/06t-terraform-codegen.agent.md";
+check(
+  "Has Phase 1.5: Governance Compliance Mapping",
+  fileContains(tfCodeGenPath, "Phase 1.5"),
+);
+check("Phase 1.5 is a HARD GATE", fileContains(tfCodeGenPath, "HARD GATE"));
+check(
+  "References 04-governance-constraints.json",
+  fileContains(tfCodeGenPath, "04-governance-constraints.json"),
+);
+check(
+  "Uses azurePropertyPath for policy translation",
+  fileContains(tfCodeGenPath, "azurePropertyPath"),
+);
+
+// 8. Terraform review subagent has governance compliance section
+console.log("\n📄 terraform-review-subagent.agent.md");
+const tfReviewPath =
+  ".github/agents/_subagents/terraform-review-subagent.agent.md";
+check(
+  "Has Governance Compliance section",
+  fileContains(tfReviewPath, "### 7. Governance Compliance"),
+);
+check(
+  "References azurePropertyPath for Terraform attribute translation",
+  fileContains(tfReviewPath, "azurePropertyPath"),
+);
+
+// 9. terraform-policy-compliance.instructions.md exists and is valid
+console.log("\n📄 terraform-policy-compliance.instructions.md");
+const tfPolicyInstrPath =
+  ".github/instructions/terraform-policy-compliance.instructions.md";
+check("File exists", fileExists(tfPolicyInstrPath));
+check(
+  "Has correct applyTo scope including *.tf",
+  fileContains(tfPolicyInstrPath, "**/*.tf"),
+);
+check(
+  'States "Azure Policy always wins"',
+  fileContains(tfPolicyInstrPath, "Azure Policy always wins"),
+);
+check(
+  "References 04-governance-constraints.json",
+  fileContains(tfPolicyInstrPath, "04-governance-constraints.json"),
+);
+
+// 10. Governance discovery subagent produces BOTH bicepPropertyPath AND azurePropertyPath
+console.log("\n📄 governance-discovery-subagent.agent.md (dual-field)");
+const govDiscSubPath =
+  ".github/agents/_subagents/governance-discovery-subagent.agent.md";
+check(
+  "Produces bicepPropertyPath field in JSON output",
+  fileContains(govDiscSubPath, "bicepPropertyPath"),
+);
+check(
+  "Produces azurePropertyPath field in JSON output",
+  fileContains(govDiscSubPath, "azurePropertyPath"),
+);
+
+// Summary
+console.log(`\n${"─".repeat(50)}`);
+console.log(
+  `Checks: ${checks} | Passed: ${checks - errors} | Failed: ${errors}`,
+);
+if (errors > 0) {
+  console.error(
+    `\n❌ ${errors} governance guardrail(s) missing — see failures above`,
+  );
+  process.exit(1);
+} else {
+  console.log("\n✅ All governance guardrails intact");
+}

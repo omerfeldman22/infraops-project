@@ -1,0 +1,261 @@
+{
+  "$schema": "agent-registry-v1",
+  "description": "Machine-readable registry mapping agent roles to their definitions, models, and required skills",
+  "agents": {
+    "conductor": {
+      "agent": ".github/agents/01-conductor.agent.md",
+      "model": "Claude Opus 4.6",
+      "skills": [
+        "golden-principles",
+        "session-resume",
+        "azure-defaults",
+        "azure-artifacts",
+        "workflow-engine"
+      ],
+      "invokable": true,
+      "step": null
+    },
+    "conductor-fast-path": {
+      "agent": ".github/agents/01-conductor-fastpath.agent.md",
+      "model": "Claude Sonnet 4.6",
+      "skills": [
+        "golden-principles",
+        "session-resume",
+        "azure-defaults",
+        "azure-artifacts"
+      ],
+      "invokable": true,
+      "step": null
+    },
+    "requirements": {
+      "agent": ".github/agents/02-requirements.agent.md",
+      "model": "Claude Opus 4.6",
+      "skills": ["azure-defaults", "azure-artifacts", "session-resume"],
+      "invokable": true,
+      "step": 1
+    },
+    "architect": {
+      "agent": ".github/agents/03-architect.agent.md",
+      "model": "Claude Opus 4.6",
+      "skills": [
+        "azure-defaults",
+        "azure-artifacts",
+        "context-shredding",
+        "session-resume",
+        "microsoft-docs"
+      ],
+      "invokable": true,
+      "step": 2
+    },
+    "design": {
+      "agent": ".github/agents/04-design.agent.md",
+      "model": "GPT-5.3-Codex",
+      "skills": ["azure-diagrams", "azure-adr"],
+      "invokable": true,
+      "step": 3
+    },
+    "governance": {
+      "agent": ".github/agents/04g-governance.agent.md",
+      "model": "Claude Sonnet 4.6",
+      "skills": [
+        "azure-defaults",
+        "azure-artifacts",
+        "session-resume",
+        "microsoft-docs"
+      ],
+      "invokable": true,
+      "step": 3.5
+    },
+    "iac-plan": {
+      "bicep": {
+        "agent": ".github/agents/05b-bicep-planner.agent.md",
+        "model": "Claude Opus 4.6",
+        "skills": [
+          "azure-defaults",
+          "azure-artifacts",
+          "azure-bicep-patterns",
+          "session-resume",
+          "microsoft-docs",
+          "microsoft-code-reference"
+        ]
+      },
+      "terraform": {
+        "agent": ".github/agents/05t-terraform-planner.agent.md",
+        "model": "Claude Opus 4.6",
+        "skills": [
+          "azure-defaults",
+          "azure-artifacts",
+          "terraform-patterns",
+          "session-resume",
+          "microsoft-docs",
+          "microsoft-code-reference"
+        ]
+      },
+      "invokable": true,
+      "step": 4
+    },
+    "iac-code": {
+      "bicep": {
+        "agent": ".github/agents/06b-bicep-codegen.agent.md",
+        "model": "Claude Opus 4.6",
+        "skills": [
+          "azure-defaults",
+          "azure-artifacts",
+          "azure-bicep-patterns",
+          "context-shredding",
+          "session-resume",
+          "microsoft-docs",
+          "microsoft-code-reference"
+        ]
+      },
+      "terraform": {
+        "agent": ".github/agents/06t-terraform-codegen.agent.md",
+        "model": "Claude Opus 4.6",
+        "skills": [
+          "azure-defaults",
+          "azure-artifacts",
+          "terraform-patterns",
+          "context-shredding",
+          "session-resume",
+          "microsoft-docs",
+          "microsoft-code-reference"
+        ]
+      },
+      "invokable": true,
+      "step": 5
+    },
+    "deploy": {
+      "bicep": {
+        "agent": ".github/agents/07b-bicep-deploy.agent.md",
+        "model": "Claude Sonnet 4.6",
+        "skills": [
+          "azure-defaults",
+          "azure-artifacts",
+          "iac-common",
+          "github-operations"
+        ]
+      },
+      "terraform": {
+        "agent": ".github/agents/07t-terraform-deploy.agent.md",
+        "model": "Claude Sonnet 4.6",
+        "skills": [
+          "azure-defaults",
+          "azure-artifacts",
+          "iac-common",
+          "terraform-patterns",
+          "github-operations"
+        ]
+      },
+      "invokable": true,
+      "step": 6
+    },
+    "as-built": {
+      "agent": ".github/agents/08-as-built.agent.md",
+      "model": "GPT-5.3-Codex",
+      "skills": [
+        "azure-defaults",
+        "azure-artifacts",
+        "azure-diagrams",
+        "context-shredding",
+        "session-resume",
+        "microsoft-docs"
+      ],
+      "invokable": true,
+      "step": 7
+    },
+    "diagnose": {
+      "agent": ".github/agents/09-diagnose.agent.md",
+      "model": "Claude Sonnet 4.6",
+      "skills": [
+        "azure-troubleshooting",
+        "azure-defaults",
+        "microsoft-docs",
+        "microsoft-code-reference"
+      ],
+      "invokable": true,
+      "step": null
+    },
+    "challenger": {
+      "agent": ".github/agents/10-challenger.agent.md",
+      "model": "GPT-5.4",
+      "skills": [],
+      "invokable": true,
+      "step": null
+    },
+    "context-optimizer": {
+      "agent": ".github/agents/11-context-optimizer.agent.md",
+      "model": "Claude Opus 4.6",
+      "skills": ["context-optimizer"],
+      "invokable": true,
+      "step": null
+    }
+  },
+  "subagents": {
+    "challenger-review-subagent": {
+      "agent": ".github/agents/_subagents/challenger-review-subagent.agent.md",
+      "model": "GPT-5.4",
+      "skills": [],
+      "invokable": false
+    },
+    "challenger-review-codex-subagent": {
+      "agent": ".github/agents/_subagents/challenger-review-codex-subagent.agent.md",
+      "model": "GPT-5.3-Codex",
+      "skills": [],
+      "invokable": false
+    },
+    "challenger-review-batch-subagent": {
+      "agent": ".github/agents/_subagents/challenger-review-batch-subagent.agent.md",
+      "model": "GPT-5.3-Codex",
+      "skills": [],
+      "invokable": false
+    },
+    "cost-estimate-subagent": {
+      "agent": ".github/agents/_subagents/cost-estimate-subagent.agent.md",
+      "model": "GPT-5.3-Codex",
+      "skills": ["azure-defaults"],
+      "invokable": false
+    },
+    "governance-discovery-subagent": {
+      "agent": ".github/agents/_subagents/governance-discovery-subagent.agent.md",
+      "model": "GPT-5.3-Codex",
+      "skills": ["azure-defaults"],
+      "invokable": false
+    },
+    "bicep-lint-subagent": {
+      "agent": ".github/agents/_subagents/bicep-lint-subagent.agent.md",
+      "model": "Claude Sonnet 4.6",
+      "skills": [],
+      "invokable": false
+    },
+    "bicep-review-subagent": {
+      "agent": ".github/agents/_subagents/bicep-review-subagent.agent.md",
+      "model": "Claude Sonnet 4.6",
+      "skills": ["azure-bicep-patterns"],
+      "invokable": false
+    },
+    "bicep-whatif-subagent": {
+      "agent": ".github/agents/_subagents/bicep-whatif-subagent.agent.md",
+      "model": "Claude Sonnet 4.6",
+      "skills": [],
+      "invokable": false
+    },
+    "terraform-lint-subagent": {
+      "agent": ".github/agents/_subagents/terraform-lint-subagent.agent.md",
+      "model": "Claude Sonnet 4.6",
+      "skills": [],
+      "invokable": false
+    },
+    "terraform-review-subagent": {
+      "agent": ".github/agents/_subagents/terraform-review-subagent.agent.md",
+      "model": "Claude Sonnet 4.6",
+      "skills": ["terraform-patterns"],
+      "invokable": false
+    },
+    "terraform-plan-subagent": {
+      "agent": ".github/agents/_subagents/terraform-plan-subagent.agent.md",
+      "model": "Claude Sonnet 4.6",
+      "skills": [],
+      "invokable": false
+    }
+  }
+}
