@@ -56,6 +56,15 @@ are enforced as first-class concerns across all generated infrastructure.
 
   [:octicons-arrow-right-24: Agent deep dive](agents.md)
 
+- :material-puzzle-outline:{ .lg .middle } **Agentic Patterns**
+
+  ***
+
+  All 15 design patterns — Conductor, Challenger, DAG, context shredding,
+  circuit breaker, and more — with implementation pointers.
+
+  [:octicons-arrow-right-24: Agentic patterns](agentic-patterns.md)
+
 - :material-book-open-variant:{ .lg .middle } **Skills & Instructions**
 
   ***
